@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NutriLog</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --teal:#01696f;--tl:#02888f;--tg:rgba(1,105,111,0.3);
+  --or:#da7101;--fi:#e85d04;--gn:#22c55e;--rd:#ef4444;
+  --f:'Satoshi',sans-serif;--r:18px;--rs:12px;--tr:0.3s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#0e1117;--bg3:#1c2333;--card:#182030;--card2:#1e2840;
+  --bd:rgba(255,255,255,0.08);--tx:#e8eaf0;--t2:#9aa3b8;--t3:#5e6a82;
+  --sh:6px 6px 18px rgba(0,0,0,.55),-3px -3px 10px rgba(255,255,255,.03);
+  --in:inset 3px 3px 8px rgba(0,0,0,.4),inset -2px -2px 6px rgba(255,255,255,.03);
+  --ib:#0d1220;
+}
+[data-theme="light"]{
+  --bg:#eef1f7;--bg3:#dde2ed;--card:#eef1f7;--card2:#e4e9f2;
+  --bd:rgba(0,0,0,.08);--tx:#1a2030;--t2:#4a5570;--t3:#8899b0;
+  --sh:5px 5px 14px rgba(160,170,195,.6),-3px -3px 10px rgba(255,255,255,.9);
+  --in:inset 3px 3px 8px rgba(160,170,195,.5),inset -2px -2px 6px rgba(255,255,255,.8);
+  --ib:#e4e9f2;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;}
+body{font-family:var(--f);background:var(--bg);color:var(--tx);transition:background .3s,color .3s;overflow-x:hidden;}
+.app{max-width:520px;margin:0 auto;padding-bottom:120px;}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:100;background:var(--bg);padding:14px 18px 10px;border-bottom:1px solid var(--bd);backdrop-filter:blur(20px);}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.logo{display:flex;align-items:center;gap:8px;}
+.logo-ico{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--tl));display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 10px var(--tg);}
+.logo-txt{font-size:1.15rem;font-weight:800;letter-spacing:-.5px;}
+.logo-txt b{color:var(--teal);font-weight:800;}
+.hbtns{display:flex;gap:6px;}
+.hbtn{width:36px;height:36px;border-radius:10px;border:none;cursor:pointer;background:var(--card);color:var(--t2);font-size:16px;box-shadow:var(--sh);display:flex;align-items:center;justify-content:center;transition:all var(--tr);position:relative;padding:0;}
+.hbtn:hover{color:var(--teal);}
+.sdot{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--gn);border:1.5px solid var(--bg);display:none;}
+.sdot.on{display:block;} .sdot.err{background:var(--rd);} .sdot.spin{background:var(--or);animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+
+/* DATE NAV */
+.dnav{display:flex;align-items:center;justify-content:space-between;background:var(--card);border-radius:var(--rs);padding:7px 10px;box-shadow:var(--sh);}
+.darr{background:none;border:none;cursor:pointer;color:var(--t2);font-size:20px;padding:2px 10px;border-radius:7px;line-height:1;transition:all var(--tr);}
+.darr:hover{background:var(--bg3);color:var(--teal);}
+.dctr{text-align:center;}
+.dlbl{font-size:.65rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;}
+.dval{font-size:.9rem;font-weight:700;margin-top:2px;}
+.today-pill{display:inline-block;background:var(--teal);color:#fff;font-size:.58rem;font-weight:800;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;margin-left:5px;vertical-align:middle;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;padding:10px 18px 0;}
+.tab{flex:1;padding:9px 4px;border:none;cursor:pointer;background:var(--card);color:var(--t3);border-radius:var(--rs);font-family:var(--f);font-size:.8rem;font-weight:700;box-shadow:var(--sh);transition:all var(--tr);}
+.tab.active{background:linear-gradient(135deg,var(--teal),var(--tl));color:#fff;box-shadow:0 3px 14px var(--tg);}
+
+/* SUMMARY */
+.sum{margin:12px 18px 0;background:var(--card);border-radius:var(--r);padding:16px;box-shadow:var(--sh);border:1px solid var(--bd);}
+.sum-ttl{font-size:.65rem;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;}
+.netrow{display:flex;align-items:flex-end;gap:6px;margin-bottom:12px;}
+.netnum{font-size:2.5rem;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,var(--teal),var(--tl));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.netnum.over{background:linear-gradient(135deg,var(--fi),var(--or));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.netlbl{font-size:.75rem;color:var(--t3);font-weight:600;padding-bottom:5px;}
+.bkrow{display:flex;gap:8px;margin-bottom:13px;}
+.bki{flex:1;background:var(--bg3);border-radius:10px;padding:8px 10px;}
+.bki-l{font-size:.6rem;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.bki-v{font-size:.9rem;font-weight:800;margin-top:2px;}
+.ov{color:var(--or);} .bv{color:var(--fi);}
+.pbar-row{margin-bottom:8px;}
+.pbar-hd{display:flex;justify-content:space-between;margin-bottom:4px;}
+.pbar-l{font-size:.7rem;font-weight:600;color:var(--t2);}
+.pbar-v{font-size:.7rem;font-weight:700;color:var(--tx);}
+.ptrack{height:9px;background:var(--bg3);border-radius:20px;overflow:hidden;position:relative;box-shadow:var(--in);}
+.pfill{height:100%;border-radius:20px;transition:width .6s cubic-bezier(.4,0,.2,1);background:linear-gradient(90deg,var(--teal),var(--tl));}
+.pfill.w{background:linear-gradient(90deg,var(--or),#f59e0b);}
+.pfill.o{background:linear-gradient(90deg,var(--fi),#ff6b35);}
+.pzone{position:absolute;top:0;height:100%;background:rgba(34,197,94,.1);border-left:1.5px solid rgba(34,197,94,.4);border-right:1.5px solid rgba(34,197,94,.4);}
+
+/* MEAL CARDS */
+.meals{padding:0 18px;margin-top:12px;}
+.mcard{background:var(--card);border-radius:var(--r);margin-bottom:12px;box-shadow:var(--sh);border:1px solid var(--bd);overflow:hidden;}
+.mhdr{display:flex;align-items:center;padding:14px 16px;gap:10px;}
+.memo{font-size:1.4rem;flex-shrink:0;}
+.minfo{flex:1;min-width:0;}
+.mname{font-size:.9rem;font-weight:800;}
+.mstat{font-size:.72rem;color:var(--t3);margin-top:2px;}
+/* THE ADD BUTTON — big and clear */
+.madd{
+  flex-shrink:0;
+  min-width:64px;height:32px;
+  border-radius:8px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--teal),var(--tl));
+  color:#fff;font-family:var(--f);font-size:.75rem;font-weight:800;
+  box-shadow:0 2px 10px var(--tg);
+  transition:all var(--tr);
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  letter-spacing:.3px;
+}
+.madd:hover{transform:scale(1.04);box-shadow:0 4px 14px var(--tg);}
+.madd.open{background:linear-gradient(135deg,var(--fi),var(--or));}
+.burncard .madd{background:linear-gradient(135deg,var(--fi),var(--or));box-shadow:0 2px 10px rgba(232,93,4,.35);}
+.burncard .madd.open{background:var(--t3);}
+
+/* SLIDE-DOWN FORM */
+.aform{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1);background:var(--bg3);}
+.aform.open{max-height:200px;}
+.aform-inner{padding:12px 16px 14px;}
+.frow{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+.finp{
+  flex:1;min-width:80px;
+  padding:10px 12px;
+  background:var(--ib);border:1.5px solid var(--bd);border-radius:10px;
+  color:var(--tx);font-family:var(--f);font-size:.85rem;font-weight:600;
+  outline:none;transition:border-color var(--tr);
+  box-shadow:var(--in);
+}
+.finp:focus{border-color:var(--teal);}
+.finp::placeholder{color:var(--t3);font-weight:400;}
+.finp.sm{flex:0 0 72px;min-width:0;}
+.fadd-btn{
+  flex-shrink:0;
+  padding:10px 16px;
+  background:linear-gradient(135deg,var(--teal),var(--tl));
+  border:none;border-radius:10px;
+  color:#fff;font-family:var(--f);font-weight:800;font-size:.82rem;
+  cursor:pointer;white-space:nowrap;
+  box-shadow:0 2px 10px var(--tg);
+  transition:all var(--tr);
+}
+.fadd-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px var(--tg);}
+
+/* FOOD LIST */
+.flist{padding:0 16px 10px;}
+.flist:empty{padding:0;}
+.fitem{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 11px;
+  background:var(--card2);border-radius:10px;
+  margin-bottom:5px;border:1px solid var(--bd);
+  animation:sldin .25s ease;
+}
+@keyframes sldin{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:translateY(0);}}
+.fname{flex:1;font-size:.83rem;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fkcal{font-size:.78rem;font-weight:700;color:var(--or);white-space:nowrap;}
+.fprot{font-size:.75rem;font-weight:600;color:var(--tl);white-space:nowrap;}
+.fdel{background:none;border:none;cursor:pointer;color:var(--t3);font-size:14px;padding:3px 5px;border-radius:6px;transition:all var(--tr);flex-shrink:0;line-height:1;}
+.fdel:hover{background:rgba(239,68,68,.15);color:var(--rd);}
+.empty{text-align:center;padding:12px 0;color:var(--t3);font-size:.75rem;font-style:italic;}
+
+/* TABS CONTENT */
+.tc{display:none;} .tc.active{display:block;}
+
+/* DASHBOARD */
+.dash{padding:12px 18px;}
+.dcard{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--sh);border:1px solid var(--bd);}
+.dtitle{font-size:.72rem;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:13px;display:flex;align-items:center;justify-content:space-between;}
+.ptabs{display:flex;gap:3px;}
+.pbtn{padding:4px 9px;border:none;border-radius:6px;cursor:pointer;background:var(--bg3);color:var(--t3);font-family:var(--f);font-size:.68rem;font-weight:700;transition:all var(--tr);}
+.pbtn.active{background:var(--teal);color:#fff;}
+.cwrap{position:relative;height:170px;}
+.wtbl{width:100%;border-collapse:collapse;font-size:.74rem;}
+.wtbl th{color:var(--t3);font-weight:700;text-align:left;padding:5px 6px;border-bottom:1px solid var(--bd);}
+.wtbl td{padding:7px 6px;border-bottom:1px solid var(--bd);font-weight:500;}
+.wtbl tr:last-child td{border-bottom:none;}
+.wtbl tr:hover td{background:var(--bg3);}
+.tag{display:inline-block;padding:2px 6px;border-radius:5px;font-size:.62rem;font-weight:700;}
+.tag.ok{background:rgba(34,197,94,.15);color:var(--gn);}
+.tag.ov2{background:rgba(232,93,4,.15);color:var(--fi);}
+.tag.un{background:rgba(100,116,139,.15);color:var(--t3);}
+.srow{display:flex;gap:8px;margin-bottom:12px;}
+.smi{flex:1;background:var(--card);border-radius:var(--rs);padding:11px 8px;box-shadow:var(--sh);border:1px solid var(--bd);text-align:center;}
+.smiv{font-size:1.15rem;font-weight:900;color:var(--teal);}
+.smil{font-size:.58rem;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity var(--tr);}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--card);border-radius:var(--r) var(--r) 0 0;padding:22px 20px 44px;width:100%;max-width:520px;transform:translateY(100%);transition:transform .4s cubic-bezier(.4,0,.2,1);box-shadow:0 -8px 40px rgba(0,0,0,.3);}
+.overlay.open .modal{transform:translateY(0);}
+.mhandle{width:38px;height:4px;border-radius:2px;background:var(--bd);margin:0 auto 16px;}
+.mtitle{font-size:1rem;font-weight:900;margin-bottom:16px;}
+.mf{margin-bottom:13px;}
+.ml{font-size:.7rem;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block;}
+.mhint{font-size:.67rem;color:var(--t3);margin-top:3px;line-height:1.4;}
+.mhint a{color:var(--teal);text-decoration:none;}
+.mi{width:100%;padding:11px 13px;background:var(--ib);border:1.5px solid var(--bd);border-radius:11px;color:var(--tx);font-family:var(--f);font-size:.88rem;font-weight:600;outline:none;transition:border-color var(--tr);}
+.mi:focus{border-color:var(--teal);}
+.msave{width:100%;padding:13px;background:linear-gradient(135deg,var(--teal),var(--tl));border:none;border-radius:13px;color:#fff;font-family:var(--f);font-size:.9rem;font-weight:900;cursor:pointer;box-shadow:0 4px 18px var(--tg);transition:all var(--tr);margin-top:4px;}
+.msave:hover{transform:translateY(-2px);}
+.sec{margin-top:16px;padding-top:16px;border-top:1px solid var(--bd);}
+.sec-ttl{font-size:.78rem;font-weight:800;margin-bottom:10px;}
+.sstrow{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+.ssb{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg3);border-radius:8px;font-size:.7rem;font-weight:600;}
+.ssd{width:7px;height:7px;border-radius:50%;background:var(--t3);}
+.ssd.ok{background:var(--gn);} .ssd.err{background:var(--rd);}
+.sbtns{display:flex;gap:7px;}
+.sbtn{flex:1;padding:10px;border:none;border-radius:10px;cursor:pointer;font-family:var(--f);font-weight:700;font-size:.77rem;transition:all var(--tr);}
+.sbtn.push{background:linear-gradient(135deg,var(--teal),var(--tl));color:#fff;box-shadow:0 2px 8px var(--tg);}
+.sbtn.pull{background:var(--bg3);color:var(--tx);}
+.sbtn:hover{transform:translateY(-1px);}
+.sbtn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+.iobtns{display:flex;gap:7px;}
+.iobtn{flex:1;padding:10px;border:1px solid var(--bd);border-radius:10px;cursor:pointer;font-family:var(--f);font-weight:700;font-size:.74rem;background:var(--bg3);color:var(--tx);transition:all var(--tr);}
+.iobtn:hover{border-color:var(--teal);color:var(--teal);}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:var(--bg);border-top:1px solid var(--bd);padding:8px 18px 18px;display:flex;gap:4px;z-index:200;backdrop-filter:blur(20px);}
+.nbtn{flex:1;padding:9px 4px 7px;border:none;cursor:pointer;background:transparent;color:var(--t3);font-family:var(--f);font-size:.62rem;font-weight:800;border-radius:11px;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all var(--tr);text-transform:uppercase;letter-spacing:.5px;}
+.nbtn .ni{font-size:20px;transition:transform var(--tr);}
+.nbtn.active{color:var(--teal);}
+.nbtn.active .ni{transform:scale(1.12);}
+
+/* TOAST */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-70px);background:var(--card);color:var(--tx);border:1px solid var(--bd);padding:10px 18px;border-radius:30px;font-size:.78rem;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.3);z-index:999;transition:transform .35s cubic-bezier(.4,0,.2,1);pointer-events:none;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@keyframes nup{from{opacity:0;transform:scale(.82);}to{opacity:1;transform:scale(1);}}
+.anm{animation:nup .35s ease;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--teal);border-radius:2px;}
+@media(min-width:521px){.app{border-left:1px solid var(--bd);border-right:1px solid var(--bd);}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="logo">
+        <div class="logo-ico">&#129367;</div>
+        <div class="logo-txt">Nutri<b>Log</b></div>
+      </div>
+      <div class="hbtns">
+        <button type="button" class="hbtn" id="syncBtn" title="Cloud Sync">&#9729;&#65039;<span class="sdot" id="syncDot"></span></button>
+        <button type="button" class="hbtn" id="goalsBtn" title="Goals">&#127919;</button>
+        <button type="button" class="hbtn" id="themeBtn" title="Theme">&#127769;</button>
+      </div>
+    </div>
+    <div class="dnav">
+      <button type="button" class="darr" id="prevDay">&#8249;</button>
+      <div class="dctr">
+        <div class="dlbl">Tracking</div>
+        <div class="dval" id="dateDisplay">&#8212;</div>
+      </div>
+      <button type="button" class="darr" id="nextDay">&#8250;</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button type="button" class="tab active" data-tab="log">&#128203; Log</button>
+    <button type="button" class="tab" data-tab="dashboard">&#128202; Dashboard</button>
+  </div>
+
+  <!-- LOG TAB -->
+  <div class="tc active" id="tc-log">
+    <div class="sum">
+      <div class="sum-ttl">Daily Summary</div>
+      <div class="netrow">
+        <div class="netnum" id="netKcal">0</div>
+        <div class="netlbl">kcal eaten</div>
+      </div>
+      <div class="bkrow">
+        <div class="bki"><div class="bki-l">&#127869; Eaten</div><div class="bki-v ov" id="totEaten">0 kcal</div></div>
+        <div class="bki"><div class="bki-l">&#128293; Burned</div><div class="bki-v bv" id="totBurned">0 kcal</div></div>
+        <div class="bki"><div class="bki-l">&#128170; Protein</div><div class="bki-v" style="color:var(--tl)" id="totProt">0 g</div></div>
+      </div>
+      <div class="pbar-row">
+        <div class="pbar-hd"><span class="pbar-l">&#9889; Net Calories</span><span class="pbar-v" id="calPV">0 / 1800-1900 kcal</span></div>
+        <div class="ptrack"><div class="pzone" id="calZone"></div><div class="pfill" id="calBar" style="width:0%"></div></div>
+      </div>
+      <div class="pbar-row" style="margin-bottom:0">
+        <div class="pbar-hd"><span class="pbar-l">&#129385; Protein</span><span class="pbar-v" id="protPV">0 / 140 g</span></div>
+        <div class="ptrack"><div class="pfill" id="protBar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="meals" id="mcon"></div>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div class="tc" id="tc-dashboard">
+    <div class="dash">
+      <div class="srow" id="srow"></div>
+      <div class="dcard">
+        <div class="dtitle">Calories
+          <div class="ptabs">
+            <button type="button" class="pbtn active" data-p="30">30d</button>
+            <button type="button" class="pbtn" data-p="60">60d</button>
+            <button type="button" class="pbtn" data-p="90">90d</button>
+          </div>
+        </div>
+        <div class="cwrap"><canvas id="calChart"></canvas></div>
+      </div>
+      <div class="dcard">
+        <div class="dtitle">Protein (g/day)</div>
+        <div class="cwrap"><canvas id="protChart"></canvas></div>
+      </div>
+      <div class="dcard">
+        <div class="dtitle">Weekly Overview</div>
+        <table class="wtbl"><thead><tr><th>Day</th><th>Kcal</th><th>Protein</th><th>Status</th></tr></thead>
+        <tbody id="wtbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button type="button" class="nbtn active" data-tab="log"><span class="ni">&#128203;</span>Log</button>
+  <button type="button" class="nbtn" data-tab="dashboard"><span class="ni">&#128202;</span>Dashboard</button>
+</div>
+
+<!-- GOALS MODAL -->
+<div class="overlay" id="goalsModal">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">&#127919; Daily Goals</div>
+    <div class="mf"><label class="ml">Calorie Min (kcal)</label><input type="number" class="mi" id="gMin" placeholder="1800"/></div>
+    <div class="mf"><label class="ml">Calorie Max (kcal)</label><input type="number" class="mi" id="gMax" placeholder="1900"/></div>
+    <div class="mf"><label class="ml">Protein Target (g)</label><input type="number" class="mi" id="gProt" placeholder="140"/></div>
+    <button type="button" class="msave" id="saveGoals">Save Goals</button>
+  </div>
+</div>
+
+<!-- SYNC MODAL -->
+<div class="overlay" id="syncModal">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">&#9729;&#65039; Cloud Sync</div>
+    <p style="font-size:.77rem;color:var(--t2);margin-bottom:14px;line-height:1.5;">
+      Sync across devices via <strong>JSONBin.io</strong> (free).<br>
+      &#8594; Sign up at <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> &#8594; Account &#8594; API Keys.
+    </p>
+    <div class="mf"><label class="ml">Master Key</label><input type="password" class="mi" id="sKey" placeholder="$2a$10$..."/></div>
+    <div class="mf">
+      <label class="ml">Bin ID <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t3)">(auto-created on first push)</span></label>
+      <input type="text" class="mi" id="sBin" placeholder="Leave empty to create new"/>
+      <div class="mhint">Copy this ID to your other devices after first push.</div>
+    </div>
+    <button type="button" class="msave" id="saveSyncCfg">Save Config</button>
+    <div class="sec">
+      <div class="sec-ttl">&#8597; Sync Now</div>
+      <div class="sstrow">
+        <div class="ssb"><div class="ssd" id="ssDot"></div><span id="ssText">Not configured</span></div>
+        <span style="font-size:.65rem;color:var(--t3);margin-left:auto" id="ssTime"></span>
+      </div>
+      <div class="sbtns">
+        <button type="button" class="sbtn push" id="pushBtn">&#8593; Push to Cloud</button>
+        <button type="button" class="sbtn pull" id="pullBtn">&#8595; Pull from Cloud</button>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-ttl" style="margin-bottom:9px">&#128229; Manual Backup</div>
+      <div class="iobtns">
+        <button type="button" class="iobtn" id="exportBtn">&#8595; Export JSON</button>
+        <button type="button" class="iobtn" id="importBtn">&#8593; Import JSON</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none"/>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="tico"></span><span id="tmsg"></span></div>
+
+<script>
+// ── DATA ───────────────────────────────────────────────────────────────────
+var MEALS = [
+  { id:'breakfast', name:'Breakfast', emoji:'\uD83C\uDF05', burn:false },
+  { id:'lunch',     name:'Lunch',     emoji:'\u2600\uFE0F',  burn:false },
+  { id:'snack',     name:'Snack',     emoji:'\uD83C\uDF4E', burn:false },
+  { id:'dinner',    name:'Dinner',    emoji:'\uD83C\uDF7D\uFE0F', burn:false },
+  { id:'burn',      name:'Active Burn', emoji:'\uD83D\uDD25', burn:true }
+];
+var JBIN = 'https://api.jsonbin.io/v3';
+var currentDate = todayStr();
+var goals = lsJ('nl_goals') || { calMin:1800, calMax:1900, prot:140 };
+var syncCfg = lsJ('nl_sync') || { apiKey:'', binId:'', lastSync:'' };
+var calCI = null, protCI = null, dashPeriod = 30;
+
+// ── STORAGE ────────────────────────────────────────────────────────────────
+function lsJ(k){ try{ return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
+function lsS(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+function getLog(d){
+  var log = lsJ('nl_log_'+d) || {};
+  MEALS.forEach(function(m){ if(!Array.isArray(log[m.id])) log[m.id]=[]; });
+  return log;
+}
+function saveLog(d,v){ lsS('nl_log_'+d, v); }
+
+// ── DATE ──────────────────────────────────────────────────────────────────
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+function offsetDate(s,n){
+  var d=new Date(s+'T12:00:00'); d.setDate(d.getDate()+n);
+  return d.toISOString().split('T')[0];
+}
+var MOS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var WDS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var WDS2 = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function fmtDate(s){
+  var d = new Date(s+'T12:00:00'), t = todayStr();
+  var lbl = WDS[d.getDay()]+', '+MOS[d.getMonth()]+' '+d.getDate();
+  if(s===t) return lbl+' <span class="today-pill">Today</span>';
+  if(s===offsetDate(t,-1)) return 'Yesterday';
+  if(s===offsetDate(t, 1)) return 'Tomorrow';
+  return lbl;
+}
+
+// ── BUILD MEAL CARDS (innerHTML, once) ────────────────────────────────────
+function buildCards(){
+  var html = '';
+  MEALS.forEach(function(m){
+    var pf = m.burn ? '' : '<input type="number" class="finp sm" id="fp-'+m.id+'" data-meal="'+m.id+'" min="0" placeholder="prot g"/>';
+    html +=
+      '<div class="mcard'+(m.burn?' burncard':'')+'" id="mc-'+m.id+'">'
+      +'<div class="mhdr">'
+        +'<span class="memo">'+m.emoji+'</span>'
+        +'<div class="minfo"><div class="mname">'+m.name+'</div><div class="mstat" id="ms-'+m.id+'">Nothing logged yet</div></div>'
+        +'<button type="button" class="madd" data-action="toggle" data-meal="'+m.id+'">+ Add</button>'
+      +'</div>'
+      +'<div class="aform" id="af-'+m.id+'">'
+        +'<div class="aform-inner"><div class="frow">'
+          +'<input type="text"   class="finp"    id="fn-'+m.id+'" data-meal="'+m.id+'" placeholder="'+(m.burn?'Activity (e.g. Running 5km)':'Food name')+'"/>'
+          +'<input type="number" class="finp sm" id="fk-'+m.id+'" data-meal="'+m.id+'" min="1" placeholder="kcal"/>'
+          +pf
+          +'<button type="button" class="fadd-btn" data-action="add" data-meal="'+m.id+'">Add &#10003;</button>'
+        +'</div></div>'
+      +'</div>'
+      +'<div class="flist" id="fl-'+m.id+'"><div class="empty">No items yet</div></div>'
+      +'</div>';
+  });
+  document.getElementById('mcon').innerHTML = html;
+}
+
+// ── TOGGLE FORM ───────────────────────────────────────────────────────────
+function toggleForm(mealId){
+  var form = document.getElementById('af-'+mealId);
+  var btn  = document.querySelector('[data-action="toggle"][data-meal="'+mealId+'"]');
+  if(!form || !btn) return;
+  var opening = !form.classList.contains('open');
+  form.classList.toggle('open', opening);
+  btn.classList.toggle('open', opening);
+  btn.textContent = opening ? '\u00d7 Close' : '+ Add';
+  if(opening){
+    var ni = document.getElementById('fn-'+mealId);
+    if(ni) setTimeout(function(){ ni.focus(); }, 50);
+  }
+}
+
+// ── ADD FOOD ──────────────────────────────────────────────────────────────
+function addFood(mealId){
+  var ni = document.getElementById('fn-'+mealId);
+  var ki = document.getElementById('fk-'+mealId);
+  var pi = document.getElementById('fp-'+mealId);
+  if(!ni || !ki){ showToast('Form not found', '\u26A0'); return; }
+  var name = (ni.value || '').trim();
+  var kcal = parseInt(ki.value) || 0;
+  var prot = pi ? (parseInt(pi.value) || 0) : 0;
+  if(!name){ ni.focus(); showToast('Enter a food name', '\u26A0\uFE0F'); return; }
+  if(kcal < 1){ ki.focus(); showToast('Enter calories > 0', '\u26A0\uFE0F'); return; }
+  var meal = getMeal(mealId);
+  var log  = getLog(currentDate);
+  var entry = { name: name, kcal: kcal };
+  if(!meal.burn) entry.prot = prot;
+  log[mealId].push(entry);
+  saveLog(currentDate, log);
+  ni.value = ''; ki.value = '';
+  if(pi) pi.value = '';
+  ni.focus();
+  showToast('Added: '+name, '\u2705');
+  refreshList(mealId);
+  refreshSummary();
+}
+
+// ── DELETE FOOD ───────────────────────────────────────────────────────────
+function deleteFood(mealId, idx){
+  var log = getLog(currentDate);
+  if(!log[mealId]) return;
+  log[mealId].splice(idx, 1);
+  saveLog(currentDate, log);
+  refreshList(mealId);
+  refreshSummary();
+}
+
+// ── REFRESH FOOD LIST ─────────────────────────────────────────────────────
+function refreshList(mealId){
+  var el = document.getElementById('fl-'+mealId);
+  var st = document.getElementById('ms-'+mealId);
+  if(!el) return;
+  var log   = getLog(currentDate);
+  var items = log[mealId] || [];
+  var meal  = getMeal(mealId);
+  var isBurn = meal.burn;
+  var totK  = items.reduce(function(s,x){ return s+x.kcal; }, 0);
+  var totP  = isBurn ? 0 : items.reduce(function(s,x){ return s+(x.prot||0); }, 0);
+  if(st){
+    st.textContent = isBurn
+      ? (totK ? '-'+totK+' kcal burned' : 'No activity logged')
+      : (totK ? totK+' kcal · '+totP+'g protein' : 'Nothing logged yet');
+  }
+  if(items.length === 0){
+    el.innerHTML = '<div class="empty">No items yet</div>';
+    return;
+  }
+  var rows = '';
+  items.forEach(function(item, idx){
+    var sign  = isBurn ? '-' : '+';
+    var phtml = (!isBurn && item.prot) ? '<span class="fprot">'+item.prot+'g</span>' : '';
+    rows += '<div class="fitem">'
+      +'<span class="fname">'+escH(item.name)+'</span>'
+      +'<span class="fkcal">'+sign+item.kcal+' kcal</span>'
+      +phtml
+      +'<button type="button" class="fdel" data-action="del" data-meal="'+mealId+'" data-i="'+idx+'">&times;</button>'
+      +'</div>';
+  });
+  el.innerHTML = rows;
+}
+
+// ── REFRESH SUMMARY ───────────────────────────────────────────────────────
+function refreshSummary(){
+  var log = getLog(currentDate);
+  var eaten=0, burned=0, prot=0;
+  MEALS.forEach(function(m){
+    var items = log[m.id] || [];
+    if(m.burn) burned += items.reduce(function(s,i){ return s+i.kcal; },0);
+    else{
+      eaten += items.reduce(function(s,i){ return s+i.kcal; },0);
+      prot  += items.reduce(function(s,i){ return s+(i.prot||0); },0);
+    }
+  });
+  var g=goals;
+  var ne=document.getElementById('netKcal');
+  ne.classList.remove('anm'); void ne.offsetWidth; ne.classList.add('anm');
+  ne.textContent = eaten;
+  ne.classList.toggle('over', eaten > g.calMax);
+  document.getElementById('totEaten').textContent  = eaten+' kcal';
+  document.getElementById('totBurned').textContent = burned ? burned+' kcal' : '—';
+  document.getElementById('totProt').textContent   = prot+' g';
+  var maxS = g.calMax * 1.5;
+  var cp   = Math.min(Math.max((eaten/maxS)*100, 0), 100);
+  var cb   = document.getElementById('calBar');
+  cb.style.width = cp+'%';
+  cb.className = 'pfill'+(eaten>g.calMax?' o': eaten>=g.calMin?' w':'');
+  document.getElementById('calPV').textContent = eaten+' / '+g.calMin+'-'+g.calMax+' kcal';
+  var zone = document.getElementById('calZone');
+  zone.style.left  = ((g.calMin/maxS)*100)+'%';
+  zone.style.width = (((g.calMax-g.calMin)/maxS)*100)+'%';
+  var pp = Math.min((prot/g.prot)*100, 100);
+  var pb = document.getElementById('protBar');
+  pb.style.width = pp+'%';
+  pb.className = 'pfill'+(prot>g.prot?' o': prot>=g.prot*.85?' w':'');
+  document.getElementById('protPV').textContent = prot+' / '+g.prot+' g';
+}
+
+// ── LOAD DATE (refresh all lists without rebuilding cards) ────────────────
+function loadDate(){
+  document.getElementById('dateDisplay').innerHTML = fmtDate(currentDate);
+  MEALS.forEach(function(m){ refreshList(m.id); });
+  refreshSummary();
+  // close open forms
+  document.querySelectorAll('.aform.open').forEach(function(f){
+    var mid = f.id.replace('af-','');
+    var btn = document.querySelector('[data-action="toggle"][data-meal="'+mid+'"]');
+    f.classList.remove('open');
+    if(btn){ btn.classList.remove('open'); btn.textContent='+ Add'; }
+  });
+}
+
+// ── EVENT DELEGATION (single listener on mcon) ────────────────────────────
+function initDelegation(){
+  var mcon = document.getElementById('mcon');
+  // click
+  mcon.addEventListener('click', function(e){
+    var el  = e.target.closest('[data-action]');
+    if(!el) return;
+    var action = el.dataset.action;
+    var mealId = el.dataset.meal;
+    if(action === 'toggle') toggleForm(mealId);
+    else if(action === 'add')    addFood(mealId);
+    else if(action === 'del')    deleteFood(mealId, parseInt(el.dataset.i));
+  });
+  // enter key
+  mcon.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter') return;
+    var mealId = e.target.dataset.meal;
+    if(mealId){ e.preventDefault(); addFood(mealId); }
+  });
+}
+
+// ── MISC ──────────────────────────────────────────────────────────────────
+function getMeal(id){ return MEALS.filter(function(m){return m.id===id;})[0]; }
+function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showToast(msg, icon){
+  document.getElementById('tmsg').textContent = msg;
+  document.getElementById('tico').textContent = icon || '';
+  var t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(function(){ t.classList.remove('show'); }, 2400);
+}
+function openM(id){ document.getElementById(id).classList.add('open'); }
+function closeM(id){ document.getElementById(id).classList.remove('open'); }
+
+// ── DASHBOARD ────────────────────────────────────────────────────────────
+function renderDash(){
+  var today=todayStr(), labels=[], cals=[], prots=[], burns=[];
+  for(var i=dashPeriod-1;i>=0;i--){
+    var d=offsetDate(today,-i), log=getLog(d), e=0,b=0,p=0;
+    MEALS.forEach(function(m){
+      var it=log[m.id]||[];
+      if(m.burn) b+=it.reduce(function(s,x){return s+x.kcal;},0);
+      else{ e+=it.reduce(function(s,x){return s+x.kcal;},0); p+=it.reduce(function(s,x){return s+(x.prot||0);},0); }
+    });
+    var dt=new Date(d+'T12:00:00');
+    labels.push(MOS[dt.getMonth()]+' '+dt.getDate());
+    cals.push(e||null); burns.push(b||null); prots.push(p||null);
+  }
+  var vC=cals.filter(function(x){return x!==null;}), vP=prots.filter(function(x){return x!==null;});
+  var aC=vC.length?Math.round(vC.reduce(function(a,b){return a+b;},0)/vC.length):0;
+  var aP=vP.length?Math.round(vP.reduce(function(a,b){return a+b;},0)/vP.length):0;
+  document.getElementById('srow').innerHTML =
+    '<div class="smi"><div class="smiv">'+aC+'</div><div class="smil">Avg kcal</div></div>'+
+    '<div class="smi"><div class="smiv">'+aP+'g</div><div class="smil">Avg protein</div></div>'+
+    '<div class="smi"><div class="smiv">'+calcStreak()+'</div><div class="smil">Streak</div></div>'+
+    '<div class="smi"><div class="smiv">'+vC.length+'</div><div class="smil">Days logged</div></div>';
+  var dk=document.documentElement.getAttribute('data-theme')==='dark';
+  var gc=dk?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)', tc=dk?'#6b7694':'#8896aa';
+  var opts={responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(1,105,111,0.9)',titleColor:'#fff',bodyColor:'#fff',cornerRadius:10,padding:10}},
+    scales:{x:{grid:{color:gc},ticks:{color:tc,maxTicksLimit:8,font:{family:'Satoshi',size:10}}},
+            y:{grid:{color:gc},ticks:{color:tc,font:{family:'Satoshi',size:10}}}}};
+  var calOpts=JSON.parse(JSON.stringify(opts));
+  calOpts.plugins.legend={display:true,labels:{color:tc,font:{family:'Satoshi',size:10},boxWidth:12,padding:12,filter:function(item){return item.text==='Eaten'||item.text==='Active Burn';}}};
+  if(calCI) calCI.destroy();
+  calCI=new Chart(document.getElementById('calChart'),{type:'line',data:{labels:labels,datasets:[
+    {label:'Eaten',data:cals,borderColor:'#01696f',backgroundColor:'rgba(1,105,111,0.1)',borderWidth:2,fill:true,tension:.4,pointBackgroundColor:'#01696f',pointRadius:3,pointHoverRadius:6,spanGaps:false},
+    {label:'Active Burn',data:burns,borderColor:'#e85d04',backgroundColor:'rgba(232,93,4,0.08)',borderWidth:2,fill:true,tension:.4,pointBackgroundColor:'#e85d04',pointRadius:3,pointHoverRadius:6,spanGaps:false},
+    {label:'Min',data:Array(labels.length).fill(goals.calMin),borderColor:'rgba(34,197,94,0.5)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false},
+    {label:'Max',data:Array(labels.length).fill(goals.calMax),borderColor:'rgba(232,93,4,0.5)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}
+  ]},options:calOpts});
+  if(protCI) protCI.destroy();
+  protCI=new Chart(document.getElementById('protChart'),{type:'line',data:{labels:labels,datasets:[
+    {data:prots,borderColor:'#da7101',backgroundColor:'rgba(218,113,1,0.1)',borderWidth:2,fill:true,tension:.4,pointBackgroundColor:'#da7101',pointRadius:3,pointHoverRadius:6,spanGaps:false},
+    {data:Array(labels.length).fill(goals.prot),borderColor:'rgba(34,197,94,0.5)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}
+  ]},options:opts});
+  var tb=document.getElementById('wtbody'); tb.innerHTML='';
+  for(var j=6;j>=0;j--){
+    var dd=offsetDate(today,-j),log2=getLog(dd),e2=0,b2=0,p2=0;
+    MEALS.forEach(function(m){var it=log2[m.id]||[];if(m.burn)b2+=it.reduce(function(s,x){return s+x.kcal;},0);else{e2+=it.reduce(function(s,x){return s+x.kcal;},0);p2+=it.reduce(function(s,x){return s+(x.prot||0);},0);}});
+    var has=e2>0,dt2=new Date(dd+'T12:00:00');
+    var tag=has?(e2>=goals.calMin&&e2<=goals.calMax?'<span class="tag ok">&#10003; On track</span>':e2>goals.calMax?'<span class="tag ov2">&#9650; Over</span>':'<span class="tag un">&#9660; Under</span>'):'<span class="tag un">&#8212;</span>';
+    var dlbl=j===0?'Today':j===1?'Yesterday':WDS2[dt2.getDay()]+' '+MOS[dt2.getMonth()]+' '+dt2.getDate();
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><strong>'+dlbl+'</strong></td><td>'+(has?net2+' kcal':'&#8212;')+'</td><td>'+(has?p2+'g':'&#8212;')+'</td><td>'+tag+'</td>';
+    tb.appendChild(tr);
+  }
+}
+function calcStreak(){
+  var s=0,t=todayStr();
+  for(var i=0;i<365;i++){
+    var d=offsetDate(t,-i),log=getLog(d);
+    if(MEALS.some(function(m){return(log[m.id]||[]).length>0;})) s++;
+    else if(i>0) break;
+  }
+  return s;
+}
+
+// ── CLOUD SYNC ────────────────────────────────────────────────────────────
+function fullData(){
+  var data={goals:goals,logs:{}};
+  Object.keys(localStorage).forEach(function(k){if(k.startsWith('nl_log_'))data.logs[k.replace('nl_log_','')]=lsJ(k);});
+  return data;
+}
+function applyData(data){
+  if(data.goals){goals=data.goals;lsS('nl_goals',goals);}
+  if(data.logs){Object.keys(data.logs).forEach(function(d){saveLog(d,data.logs[d]);});}
+}
+function updateSyncUI(){
+  var dot=document.getElementById('syncDot'),sd=document.getElementById('ssDot'),st=document.getElementById('ssText'),sl=document.getElementById('ssTime');
+  if(!syncCfg.apiKey){dot.className='sdot';sd.className='ssd';st.textContent='Not configured';}
+  else if(syncCfg.binId){dot.className='sdot on';sd.className='ssd ok';st.textContent='Configured \u2713';sl.textContent=syncCfg.lastSync?'Last: '+syncCfg.lastSync:'';}
+  else{dot.className='sdot on';sd.className='ssd';st.textContent='API key set, no bin yet';}
+}
+function doSync(push){
+  var pb=document.getElementById('pushBtn'),plb=document.getElementById('pullBtn');
+  pb.disabled=true;plb.disabled=true;
+  document.getElementById('syncDot').className='sdot spin on';
+  if(push){
+    pb.textContent='Pushing...';
+    var url=syncCfg.binId?JBIN+'/b/'+syncCfg.binId:JBIN+'/b', method=syncCfg.binId?'PUT':'POST';
+    var hdrs={'Content-Type':'application/json','X-Master-Key':syncCfg.apiKey};
+    if(!syncCfg.binId)hdrs['X-Bin-Name']='NutriLog';
+    fetch(url,{method:method,headers:hdrs,body:JSON.stringify(fullData())})
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(res.metadata&&res.metadata.id&&!syncCfg.binId){syncCfg.binId=res.metadata.id;document.getElementById('sBin').value=syncCfg.binId;}
+        syncCfg.lastSync=new Date().toLocaleTimeString();lsS('nl_sync',syncCfg);updateSyncUI();
+        document.getElementById('syncDot').className='sdot on';showToast('Pushed to cloud \u2713','\u2601\uFE0F');
+      })
+      .catch(function(){document.getElementById('syncDot').className='sdot err on';showToast('Push failed — check API key','\u274C');})
+      .finally(function(){pb.disabled=false;plb.disabled=false;pb.textContent='\u2191 Push to Cloud';});
+  }else{
+    if(!syncCfg.binId){showToast('Set Bin ID first','\u26A0\uFE0F');pb.disabled=false;plb.disabled=false;return;}
+    plb.textContent='Pulling...';
+    fetch(JBIN+'/b/'+syncCfg.binId+'/latest',{headers:{'X-Master-Key':syncCfg.apiKey}})
+      .then(function(r){return r.json();})
+      .then(function(res){
+        if(res.record){applyData(res.record);loadDate();if(document.getElementById('tc-dashboard').classList.contains('active'))renderDash();}
+        syncCfg.lastSync=new Date().toLocaleTimeString();lsS('nl_sync',syncCfg);updateSyncUI();
+        document.getElementById('syncDot').className='sdot on';showToast('Pulled \u2713','\u2601\uFE0F');
+      })
+      .catch(function(){document.getElementById('syncDot').className='sdot err on';showToast('Pull failed — check Bin ID','\u274C');})
+      .finally(function(){pb.disabled=false;plb.disabled=false;plb.textContent='\u2193 Pull from Cloud';});
+  }
+}
+
+// ── WIRE OUTER EVENTS ─────────────────────────────────────────────────────
+document.getElementById('prevDay').addEventListener('click',function(){currentDate=offsetDate(currentDate,-1);loadDate();});
+document.getElementById('nextDay').addEventListener('click',function(){currentDate=offsetDate(currentDate,1);loadDate();});
+
+document.querySelectorAll('.tab,.nbtn').forEach(function(b){
+  b.addEventListener('click',function(){
+    var tab=b.dataset.tab;
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.toggle('active',x.dataset.tab===tab);});
+    document.querySelectorAll('.nbtn').forEach(function(x){x.classList.toggle('active',x.dataset.tab===tab);});
+    document.querySelectorAll('.tc').forEach(function(x){x.classList.toggle('active',x.id==='tc-'+tab);});
+    if(tab==='dashboard') renderDash();
+  });
+});
+
+document.querySelectorAll('.pbtn').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.pbtn').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active'); dashPeriod=parseInt(b.dataset.p); renderDash();
+  });
+});
+
+document.getElementById('themeBtn').addEventListener('click',function(){
+  var dk=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',dk?'light':'dark');
+  document.getElementById('themeBtn').textContent=dk?'\u2600\uFE0F':'\uD83C\uDF19';
+  if(document.getElementById('tc-dashboard').classList.contains('active'))renderDash();
+});
+
+document.getElementById('goalsBtn').addEventListener('click',function(){
+  document.getElementById('gMin').value=goals.calMin;
+  document.getElementById('gMax').value=goals.calMax;
+  document.getElementById('gProt').value=goals.prot;
+  openM('goalsModal');
+});
+document.getElementById('goalsModal').addEventListener('click',function(e){if(e.target===this)closeM('goalsModal');});
+document.getElementById('saveGoals').addEventListener('click',function(){
+  goals={calMin:parseInt(document.getElementById('gMin').value)||1800,calMax:parseInt(document.getElementById('gMax').value)||1900,prot:parseInt(document.getElementById('gProt').value)||140};
+  lsS('nl_goals',goals);closeM('goalsModal');showToast('Goals saved!','\uD83C\uDFAF');refreshSummary();
+});
+
+document.getElementById('syncBtn').addEventListener('click',function(){
+  document.getElementById('sKey').value=syncCfg.apiKey||'';
+  document.getElementById('sBin').value=syncCfg.binId||'';
+  updateSyncUI();openM('syncModal');
+});
+document.getElementById('syncModal').addEventListener('click',function(e){if(e.target===this)closeM('syncModal');});
+document.getElementById('saveSyncCfg').addEventListener('click',function(){
+  syncCfg.apiKey=document.getElementById('sKey').value.trim();
+  syncCfg.binId=document.getElementById('sBin').value.trim();
+  lsS('nl_sync',syncCfg);updateSyncUI();showToast('Sync config saved!','\u2705');
+});
+document.getElementById('pushBtn').addEventListener('click',function(){doSync(true);});
+document.getElementById('pullBtn').addEventListener('click',function(){doSync(false);});
+document.getElementById('exportBtn').addEventListener('click',function(){
+  var b=new Blob([JSON.stringify(fullData(),null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='nutrilog-'+todayStr()+'.json';a.click();
+  showToast('Exported!','\uD83D\uDCBE');
+});
+document.getElementById('importBtn').addEventListener('click',function(){document.getElementById('importFile').click();});
+document.getElementById('importFile').addEventListener('change',function(e){
+  if(!e.target.files[0])return;
+  var r=new FileReader();
+  r.onload=function(ev){try{applyData(JSON.parse(ev.target.result));loadDate();showToast('Imported \u2713','\u2705');}catch(err){showToast('Invalid file','\u274C');}};
+  r.readAsText(e.target.files[0]);
+  e.target.value='';
+});
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+buildCards();
+initDelegation();
+loadDate();
+updateSyncUI();
+</script>
+</body>
+</html>
