@@ -332,7 +332,10 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);transition:backgr
 <div class="overlay" id="syncModal">
   <div class="modal">
     <div class="mhandle"></div>
-    <div class="mtitle">&#9729;&#65039; Cloud Sync</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+  <div class="mtitle" style="margin-bottom:0">&#9729;&#65039; Cloud Sync</div>
+  <button onclick="closeM('syncModal')" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--t2);line-height:1">&#x2715;</button>
+</div>
     <p style="font-size:.77rem;color:var(--t2);margin-bottom:14px;line-height:1.5;">
       Sync across devices via <strong>JSONBin.io</strong> (free).<br>
       &#8594; Sign up at <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> &#8594; Account &#8594; API Keys.
