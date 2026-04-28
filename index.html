@@ -714,7 +714,18 @@ function fullData(){
 }
 function applyData(data){
   if(data.goals){goals=data.goals;lsS('nl_goals_'+currentProfile,goals);}
-  if(data.logs){Object.keys(data.logs).forEach(function(d){saveLog(d,data.logs[d]);});}
+  function mergeData(local, remote){
+  var merged = { goals: local.goals, logs: {} };
+  var allKeys = {};
+  Object.keys(remote.logs||{}).forEach(function(k){ allKeys[k]=1; });
+  Object.keys(local.logs||{}).forEach(function(k){ allKeys[k]=1; });
+  Object.keys(allKeys).forEach(function(k){
+    merged.logs[k] = local.logs[k] || remote.logs[k];
+  });
+  return merged;
+}
+
+  if(data.logs){Object.keys(data.logs).forEach(function(d){ lsS('nl_log_'+d, data.logs[d]); });}
 }
 function updateSyncUI(){
   var dot=document.getElementById('syncDot'),sd=document.getElementById('ssDot'),st=document.getElementById('ssText'),sl=document.getElementById('ssTime');
@@ -728,32 +739,47 @@ function doSync(push){
   document.getElementById('syncDot').className='sdot spin on';
   if(push){
     pb.textContent='Pushing...';
-    var url=syncCfg.binId?JBIN+'/b/'+syncCfg.binId:JBIN+'/b', method=syncCfg.binId?'PUT':'POST';
     var hdrs={'Content-Type':'application/json','X-Master-Key':syncCfg.apiKey};
-    if(!syncCfg.binId)hdrs['X-Bin-Name']='NutriLog';
-    fetch(url,{method:method,headers:hdrs,body:JSON.stringify(fullData())})
-      .then(function(r){return r.json();})
-      .then(function(res){
-        if(res.metadata&&res.metadata.id&&!syncCfg.binId){syncCfg.binId=res.metadata.id;document.getElementById('sBin').value=syncCfg.binId;}
-        syncCfg.lastSync=new Date().toLocaleTimeString();lsS('nl_sync',syncCfg);updateSyncUI();
-        document.getElementById('syncDot').className='sdot on';showToast('Pushed to cloud \u2713','\u2601\uFE0F');
-      })
-      .catch(function(){document.getElementById('syncDot').className='sdot err on';showToast('Push failed — check API key','\u274C');})
-      .finally(function(){pb.disabled=false;plb.disabled=false;pb.textContent='\u2191 Push to Cloud';});
+    var doActualPush=function(dataToSend){
+      var url=syncCfg.binId?JBIN+'/b/'+syncCfg.binId:JBIN+'/b', method=syncCfg.binId?'PUT':'POST';
+      if(!syncCfg.binId)hdrs['X-Bin-Name']='NutriLog';
+      fetch(url,{method:method,headers:hdrs,body:JSON.stringify(dataToSend)})
+        .then(function(r){return r.json();})
+        .then(function(res){
+          if(res.metadata&&res.metadata.id&&!syncCfg.binId){syncCfg.binId=res.metadata.id;document.getElementById('sBin').value=syncCfg.binId;}
+          syncCfg.lastSync=new Date().toLocaleTimeString();lsS('nl_sync_'+currentProfile,syncCfg);updateSyncUI();
+          document.getElementById('syncDot').className='sdot on';showToast('Pushed to cloud \u2713','\u2601\uFE0F');
+        })
+        .catch(function(){document.getElementById('syncDot').className='sdot err on';showToast('Push failed — check API key','\u274C');})
+        .finally(function(){pb.disabled=false;plb.disabled=false;pb.textContent='\u2191 Push to Cloud';});
+    };
+    if(syncCfg.binId){
+      fetch(JBIN+'/b/'+syncCfg.binId+'/latest',{headers:{'X-Master-Key':syncCfg.apiKey}})
+        .then(function(r){return r.json();})
+        .then(function(res){
+          var merged=res.record?mergeData(fullData(),res.record):fullData();
+          applyData(merged);
+          doActualPush(merged);
+        })
+        .catch(function(){doActualPush(fullData());});
+    }else{
+      doActualPush(fullData());
+    }
   }else{
     if(!syncCfg.binId){showToast('Set Bin ID first','\u26A0\uFE0F');pb.disabled=false;plb.disabled=false;return;}
     plb.textContent='Pulling...';
     fetch(JBIN+'/b/'+syncCfg.binId+'/latest',{headers:{'X-Master-Key':syncCfg.apiKey}})
       .then(function(r){return r.json();})
       .then(function(res){
-        if(res.record){applyData(res.record);loadDate();if(document.getElementById('tc-dashboard').classList.contains('active'))renderDash();}
-        syncCfg.lastSync=new Date().toLocaleTimeString();lsS('nl_sync',syncCfg);updateSyncUI();
+        if(res.record){var merged=mergeData(fullData(),res.record);applyData(merged);loadDate();if(document.getElementById('tc-dashboard').classList.contains('active'))renderDash();}
+        syncCfg.lastSync=new Date().toLocaleTimeString();lsS('nl_sync_'+currentProfile,syncCfg);updateSyncUI();
         document.getElementById('syncDot').className='sdot on';showToast('Pulled \u2713','\u2601\uFE0F');
       })
       .catch(function(){document.getElementById('syncDot').className='sdot err on';showToast('Pull failed — check Bin ID','\u274C');})
       .finally(function(){pb.disabled=false;plb.disabled=false;plb.textContent='\u2193 Pull from Cloud';});
   }
 }
+
 
 // ── WIRE OUTER EVENTS ─────────────────────────────────────────────────────
 document.getElementById('prevDay').addEventListener('click',function(){currentDate=offsetDate(currentDate,-1);loadDate();});
