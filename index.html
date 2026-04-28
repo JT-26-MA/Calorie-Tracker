@@ -402,7 +402,8 @@ Object.keys(localStorage).forEach(function(k){
 
 
 var goals = lsJ('nl_goals_'+currentProfile) || { calMin:1800, calMax:1900, prot:140 };
-var syncCfg = lsJ('nl_sync_'+currentProfile) || { apiKey:'', binId:'', lastSync:'' };
+// migrate old sync config 
+if(!lsJ('nl_sync_Me') && lsJ('nl_sync')){   lsS('nl_sync_Me', lsJ('nl_sync')); } var syncCfg = lsJ('nl_sync_'+currentProfile) || { apiKey:'', binId:'', lastSync:'' };
 var calCI = null, protCI = null, dashPeriod = 30;
 
 // ── STORAGE ────────────────────────────────────────────────────────────────
