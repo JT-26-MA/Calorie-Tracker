@@ -624,7 +624,7 @@ function renderDash(){
     labels.push(MOS[dt.getMonth()]+' '+dt.getDate());
     cals.push(e||null); burns.push(b||null); prots.push(p||null);
   }
-  var vC=cals.filter(function(x){return x!==null;}), vP=prots.filter(function(x){return x!==null;});
+  var vC=cals.slice(0,-1).filter(function(x){return x!==null;}), vP=prots.slice(0,-1).filter(function(x){return x!==null;});
   var aC=vC.length?Math.round(vC.reduce(function(a,b){return a+b;},0)/vC.length):0;
   var aP=vP.length?Math.round(vP.reduce(function(a,b){return a+b;},0)/vP.length):0;
   document.getElementById('srow').innerHTML =
