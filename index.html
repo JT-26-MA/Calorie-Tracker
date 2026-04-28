@@ -390,6 +390,16 @@ var MEALS = [
 var JBIN = 'https://api.jsonbin.io/v3';
 var currentDate = todayStr();
 var currentProfile = localStorage.getItem('nl_active_profile') || 'Me';
+  // migrate old data to profile keys (runs once)
+Object.keys(localStorage).forEach(function(k){
+  if(k.startsWith('nl_log_') && k.charAt(7) !== 'M' && k.charAt(7) !== 'W'){
+    var newKey = 'nl_log_Me_' + k.replace('nl_log_','');
+    if(!localStorage.getItem(newKey)){
+      localStorage.setItem(newKey, localStorage.getItem(k));
+    }
+  }
+});
+
 var goals = lsJ('nl_goals_'+currentProfile) || { calMin:1800, calMax:1900, prot:140 };
 var syncCfg = lsJ('nl_sync_'+currentProfile) || { apiKey:'', binId:'', lastSync:'' };
 var calCI = null, protCI = null, dashPeriod = 30;
