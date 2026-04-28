@@ -827,11 +827,14 @@ document.getElementById('syncBtn').addEventListener('click',function(){
   updateSyncUI();openM('syncModal');
 });
 document.getElementById('syncModal').addEventListener('click',function(e){if(e.target===this)closeM('syncModal');});
-document.getElementById('saveSyncCfg').addEventListener('click',function(){
-  syncCfg.apiKey=document.getElementById('sKey').value.trim();
-  syncCfg.binId=document.getElementById('sBin').value.trim();
-  lsS('nl_sync',syncCfg);updateSyncUI();showToast('Sync config saved!','\u2705');
+document.getElementById('saveSyncCfg').addEventListener('click', function(){
+  syncCfg.apiKey = document.getElementById('sKey').value.trim();
+  syncCfg.binId  = document.getElementById('sBin').value.trim();
+  lsS('nl_sync_'+currentProfile, syncCfg);
+  updateSyncUI();
+  showToast('Sync config saved!', '\u2705');
 });
+
 document.getElementById('pushBtn').addEventListener('click',function(){doSync(true);});
 document.getElementById('pullBtn').addEventListener('click',function(){doSync(false);});
 document.getElementById('exportBtn').addEventListener('click',function(){
