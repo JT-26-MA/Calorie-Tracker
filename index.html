@@ -772,11 +772,11 @@ function doSync(push){
     fetch(JBIN+'/b/'+syncCfg.binId+'/latest',{headers:{'X-Master-Key':syncCfg.apiKey}})
       .then(function(r){return r.json();})
       .then(function(res){
-        if(res.record){var merged=mergeData(fullData(),res.record);applyData(merged);loadDate();if(document.getElementById('tc-dashboard').classList.contains('active'))renderDash();}
+        if(res.record){applyData(res.record);location.reload();}
         syncCfg.lastSync=new Date().toLocaleTimeString();lsS('nl_sync_'+currentProfile,syncCfg);updateSyncUI();
         document.getElementById('syncDot').className='sdot on';showToast('Pulled \u2713','\u2601\uFE0F');
       })
-      .catch(function(){document.getElementById('syncDot').className='sdot err on';showToast('Pull failed — check Bin ID','\u274C');})
+      .catch(function(err){document.getElementById('syncDot').className='sdot err on';showToast(err.message||'Pull failed','\u274C');alert(err);})
       .finally(function(){pb.disabled=false;plb.disabled=false;plb.textContent='\u2193 Pull from Cloud';});
   }
 }
