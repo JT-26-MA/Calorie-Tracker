@@ -653,16 +653,16 @@ function renderDash(){
     {data:Array(labels.length).fill(goals.prot),borderColor:'rgba(34,197,94,0.5)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}
   ]},options:opts});
   var tb=document.getElementById('wtbody'); tb.innerHTML='';
-  for(var j=6;j>=0;j--){
+for(var j=0;j<=6;j++){
     var dd=offsetDate(today,-j),log2=getLog(dd),e2=0,b2=0,p2=0;
     MEALS.forEach(function(m){var it=log2[m.id]||[];if(m.burn)b2+=it.reduce(function(s,x){return s+x.kcal;},0);else{e2+=it.reduce(function(s,x){return s+x.kcal;},0);p2+=it.reduce(function(s,x){return s+(x.prot||0);},0);}});
     var has=e2>0,dt2=new Date(dd+'T12:00:00');
     var tag=has?(e2>=goals.calMin&&e2<=goals.calMax?'<span class="tag ok">&#10003; On track</span>':e2>goals.calMax?'<span class="tag ov2">&#9650; Over</span>':'<span class="tag un">&#9660; Under</span>'):'<span class="tag un">&#8212;</span>';
     var dlbl=j===0?'Today':j===1?'Yesterday':WDS2[dt2.getDay()]+' '+MOS[dt2.getMonth()]+' '+dt2.getDate();
     var tr=document.createElement('tr');
-    tr.innerHTML='<td><strong>'+dlbl+'</strong></td><td>'+(has?net2+' kcal':'&#8212;')+'</td><td>'+(has?p2+'g':'&#8212;')+'</td><td>'+tag+'</td>';
+    tr.innerHTML='<td><strong>'+dlbl+'</strong></td><td>'+(has?e2+' kcal':'&#8212;')+'</td><td>'+(has?p2+'g':'&#8212;')+'</td><td>'+tag+'</td>';
     tb.appendChild(tr);
-  }
+}
 }
 function calcStreak(){
   var s=0,t=todayStr();
