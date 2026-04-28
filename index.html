@@ -239,7 +239,9 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);transition:backgr
       <div class="hbtns">
         <button type="button" class="hbtn" id="syncBtn" title="Cloud Sync">&#9729;&#65039;<span class="sdot" id="syncDot"></span></button>
         <button type="button" class="hbtn" id="goalsBtn" title="Goals">&#127919;</button>
-        <button type="button" class="hbtn" id="themeBtn" title="Theme">&#127769;</button>
+        <button type="button" class="hbtn" id="profileBtn" title="Switch profile" style="font-size:.65rem;font-weight:800;min-width:36px;color:var(--teal);">Me</button>
+<button type="button" class="hbtn" id="themeBtn" title="Theme">&#127769;</button>
+
       </div>
     </div>
     <div class="dnav">
@@ -383,19 +385,20 @@ var MEALS = [
 ];
 var JBIN = 'https://api.jsonbin.io/v3';
 var currentDate = todayStr();
-var goals = lsJ('nl_goals') || { calMin:1800, calMax:1900, prot:140 };
-var syncCfg = lsJ('nl_sync') || { apiKey:'', binId:'', lastSync:'' };
+var currentProfile = localStorage.getItem('nl_active_profile') || 'Me';
+var goals = lsJ('nl_goals_'+currentProfile) || { calMin:1800, calMax:1900, prot:140 };
+var syncCfg = lsJ('nl_sync_'+currentProfile) || { apiKey:'', binId:'', lastSync:'' };
 var calCI = null, protCI = null, dashPeriod = 30;
 
 // ── STORAGE ────────────────────────────────────────────────────────────────
 function lsJ(k){ try{ return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } }
 function lsS(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
 function getLog(d){
-  var log = lsJ('nl_log_'+d) || {};
+  var log = lsJ('nl_log_'+currentProfile+'_'+d) || {};
   MEALS.forEach(function(m){ if(!Array.isArray(log[m.id])) log[m.id]=[]; });
   return log;
 }
-function saveLog(d,v){ lsS('nl_log_'+d, v); }
+function saveLog(d,v){ lsS('nl_log_'+currentProfile+'_'+d, v); }
 
 // ── DATE ──────────────────────────────────────────────────────────────────
 function todayStr(){ return new Date().toISOString().split('T')[0]; }
@@ -607,6 +610,19 @@ function showToast(msg, icon){
   clearTimeout(t._t);
   t._t = setTimeout(function(){ t.classList.remove('show'); }, 2400);
 }
+  var PROFILES = ['Me','Wife'];
+document.getElementById('profileBtn').addEventListener('click',function(){
+  var next = PROFILES[(PROFILES.indexOf(currentProfile)+1)%PROFILES.length];
+  currentProfile = next;
+  localStorage.setItem('nl_active_profile', currentProfile);
+  goals = lsJ('nl_goals_'+currentProfile) || { calMin:1800, calMax:1900, prot:140 };
+  syncCfg = lsJ('nl_sync_'+currentProfile) || { apiKey:'', binId:'', lastSync:'' };
+  document.getElementById('profileBtn').textContent = currentProfile;
+  loadDate();
+  updateSyncUI();
+  showToast('Switched to '+currentProfile, '👤');
+});
+
 function openM(id){ document.getElementById(id).classList.add('open'); }
 function closeM(id){ document.getElementById(id).classList.remove('open'); }
 
@@ -681,7 +697,7 @@ function fullData(){
   return data;
 }
 function applyData(data){
-  if(data.goals){goals=data.goals;lsS('nl_goals',goals);}
+  if(data.goals){goals=data.goals;lsS('nl_goals_'+currentProfile,goals);}
   if(data.logs){Object.keys(data.logs).forEach(function(d){saveLog(d,data.logs[d]);});}
 }
 function updateSyncUI(){
