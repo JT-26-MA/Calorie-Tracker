@@ -560,7 +560,6 @@ function refreshSummary(){
   var ne=document.getElementById('netKcal');
   ne.classList.remove('anm'); void ne.offsetWidth; ne.classList.add('anm');
   ne.textContent = eaten;
-  animateNumber('avgActiveBurn', burned);  // Add this line
   ne.classList.toggle('over', eaten > g.calMax);
   document.getElementById('totEaten').textContent  = eaten+' kcal';
   document.getElementById('totBurned').textContent = burned ? burned+' kcal' : '—';
