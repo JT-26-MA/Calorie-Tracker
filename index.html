@@ -563,7 +563,6 @@ function refreshSummary(){
   ne.classList.toggle('over', eaten > g.calMax);
   document.getElementById('totEaten').textContent  = eaten+' kcal';
   document.getElementById('totBurned').textContent = burned ? burned+' kcal' : '—';
-  document.getElementById('avgActiveBurn').textContent = burned ? burned + ' kcal' : '0 kcal';
   document.getElementById('totProt').textContent   = prot+' g';
   var maxS = g.calMax * 1.5;
   var cp   = Math.min(Math.max((eaten/maxS)*100, 0), 100);
