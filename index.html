@@ -552,9 +552,9 @@ function refreshSummary(){
     var items = log[m.id] || [];
     if(m.burn) burned += items.reduce(function(s,i){ return s+i.kcal; },0);
     else{
-      eaten += items.reduce(function(s,i){ return s+i.kcal; },0);
-      prot  += items.reduce(function(s,i){ return s+(i.prot||0); },0);
-    }
+  eaten += items.reduce(function(s,i){ return s+i.kcal; },0);
+  prot  += items.reduce(function(s,i){ return s+(i.prot || 0); },0);
+}
   });
   var g=goals;
   var ne=document.getElementById('netKcal');
