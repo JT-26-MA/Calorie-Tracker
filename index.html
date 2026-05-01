@@ -276,6 +276,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);transition:backgr
         <div class="bki"><div class="bki-l">&#127869; Eaten</div><div class="bki-v ov" id="totEaten">0 kcal</div></div>
         <div class="bki"><div class="bki-l">&#128293; Burned</div><div class="bki-v bv" id="totBurned">0 kcal</div></div>
         <div class="bki"><div class="bki-l">&#128170; Protein</div><div class="bki-v" style="color:var(--tl)" id="totProt">0 g</div></div>
+        <div class="bki"><div class="bki-l">🔥 Burned</div><div class="bki-v bv" id="avgActiveBurn">0 kcal</div></div>
       </div>
       <div class="pbar-row">
         <div class="pbar-hd"><span class="pbar-l">&#9889; Net Calories</span><span class="pbar-v" id="calPV">0 / 1800-1900 kcal</span></div>
@@ -560,9 +561,11 @@ function refreshSummary(){
   var ne=document.getElementById('netKcal');
   ne.classList.remove('anm'); void ne.offsetWidth; ne.classList.add('anm');
   ne.textContent = eaten;
+  animateNumber('avgActiveBurn', burned);  // Add this line
   ne.classList.toggle('over', eaten > g.calMax);
   document.getElementById('totEaten').textContent  = eaten+' kcal';
   document.getElementById('totBurned').textContent = burned ? burned+' kcal' : '—';
+  document.getElementById('avgActiveBurn').textContent = burned ? burned + ' kcal' : '0 kcal';
   document.getElementById('totProt').textContent   = prot+' g';
   var maxS = g.calMax * 1.5;
   var cp   = Math.min(Math.max((eaten/maxS)*100, 0), 100);
