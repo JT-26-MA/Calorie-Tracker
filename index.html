@@ -448,7 +448,7 @@ function buildCards(){
       +'</div>'
       +'<div class="aform" id="af-'+m.id+'">'
         +'<div class="aform-inner"><div class="frow">'
-          +'<input type="text"   class="finp"    id="fn-'+m.id+'" data-meal="'+m.id+'" placeholder="'+(m.burn?'Activity (e.g. Running 5km)':'Food name')+'"/>'
+          +'<input type="text"   class="finp"    id="fn-'+m.id+'" data-meal="'+m.id+'" placeholder="'+(m.burn?'Activity (e.g. Running 5km)"/>'
           +'<input type="number" class="finp sm" id="fk-'+m.id+'" data-meal="'+m.id+'" min="1" placeholder="kcal"/>'
           +pf
           +'<button type="button" class="fadd-btn" data-action="add" data-meal="'+m.id+'">Add &#10003;</button>'
@@ -477,25 +477,44 @@ function toggleForm(mealId){
 
 // ── ADD FOOD ──────────────────────────────────────────────────────────────
 function addFood(mealId){
+  var meal = getMeal(mealId);
   var ni = document.getElementById('fn-'+mealId);
   var ki = document.getElementById('fk-'+mealId);
   var pi = document.getElementById('fp-'+mealId);
-  if(!ni || !ki){ showToast('Form not found', '\u26A0'); return; }
-  var name = (ni.value || '').trim();
+
+  if(!ki){ showToast('Form not found', '⚠'); return; }
+
+  var name = meal.burn ? ((ni && ni.value) || '').trim() : meal.name;
   var kcal = parseInt(ki.value) || 0;
   var prot = pi ? (parseInt(pi.value) || 0) : 0;
-  if(!name){ ni.focus(); showToast('Enter a food name', '\u26A0\uFE0F'); return; }
-  if(kcal < 1){ ki.focus(); showToast('Enter calories > 0', '\u26A0\uFE0F'); return; }
-  var meal = getMeal(mealId);
-  var log  = getLog(currentDate);
+
+  if(meal.burn && !name){
+    if(ni) ni.focus();
+    showToast('Enter an activity name', '⚠️');
+    return;
+  }
+
+  if(kcal < 1){
+    ki.focus();
+    showToast('Enter calories > 0', '⚠️');
+    return;
+  }
+
+  var log = getLog(currentDate);
   var entry = { name: name, kcal: kcal };
   if(!meal.burn) entry.prot = prot;
+
   log[mealId].push(entry);
   saveLog(currentDate, log);
-  ni.value = ''; ki.value = '';
+
+  if(ni) ni.value = '';
+  ki.value = '';
   if(pi) pi.value = '';
-  ni.focus();
-  showToast('Added: '+name, '\u2705');
+
+  if(meal.burn && ni) ni.focus();
+  else ki.focus();
+
+  showToast('Added: '+name, '✅');
   refreshList(mealId);
   refreshSummary();
 }
