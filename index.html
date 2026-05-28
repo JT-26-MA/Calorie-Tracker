@@ -448,7 +448,7 @@ function buildCards(){
       +'</div>'
       +'<div class="aform" id="af-'+m.id+'">'
         +'<div class="aform-inner"><div class="frow">'
-          +'<input type="text"   class="finp"    id="fn-'+m.id+'" data-meal="'+m.id+'" placeholder="'+(m.burn?'Activity (e.g. Running 5km)"/>': '')
+          +(m.burn ? '<input type="text" class="finp" id="fn-'+m.id+'" data-meal="'+m.id+'" placeholder="Activity (e.g. Running 5km)"/>' : '')
           +'<input type="number" class="finp sm" id="fk-'+m.id+'" data-meal="'+m.id+'" min="1" placeholder="kcal"/>'
           +pf
           +'<button type="button" class="fadd-btn" data-action="add" data-meal="'+m.id+'">Add &#10003;</button>'
@@ -501,7 +501,7 @@ function addFood(mealId){
   }
 
   var log = getLog(currentDate);
-  var entry = { name: name, kcal: kcal };
+  var entry = { name:name, kcal:kcal };
   if(!meal.burn) entry.prot = prot;
 
   log[mealId].push(entry);
@@ -518,6 +518,7 @@ function addFood(mealId){
   refreshList(mealId);
   refreshSummary();
 }
+
 
 // ── DELETE FOOD ───────────────────────────────────────────────────────────
 function deleteFood(mealId, idx){
